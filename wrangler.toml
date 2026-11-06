@@ -1,5 +1,6 @@
 name = "motion-mcp-server"
-main = "src/worker.ts"
+# Fork change: start at the sign-in gate, which wraps src/worker.ts (see gate/index.ts).
+main = "gate/index.ts"
 compatibility_date = "2025-04-01"
 compatibility_flags = ["nodejs_compat"]
 
@@ -17,6 +18,8 @@ deleted_classes = ["MotionMCPAgent"]
 
 [vars]
 MOTION_MCP_TOOLS = "complete"
+# Fork change: the gate's public address, used in its sign-in metadata.
+PUBLIC_ORIGIN = "https://motion-mcp-server.jiffry1017.workers.dev"
 
 [observability.logs]
 enabled = true
@@ -26,3 +29,11 @@ invocation_logs = true
 # Secrets set via wrangler:
 #   npx wrangler secret put MOTION_API_KEY
 #   npx wrangler secret put MOTION_MCP_SECRET
+#   npx wrangler secret put GATE_PASSCODE   (fork: the sign-in passcode)
+
+# Fork change: storage for the sign-in gate (tokens kept only as hashes,
+# plus the wrong-passcode counter). Create with:
+#   npx wrangler kv namespace create OAUTH_KV
+[[kv_namespaces]]
+binding = "OAUTH_KV"
+id = "2de740f2c9794162a15d6bb15d38aba6"
