@@ -494,7 +494,7 @@ export async function getAllUncompletedTasks(ctx: ResourceContext, options: GetA
     });
 
     // Apply limit to prevent resource exhaustion
-    const effectiveLimit = limit || LIMITS.MAX_SEARCH_RESULTS;
+    const effectiveLimit = limit || LIMITS.MAX_ALL_UNCOMPLETED;
     const allUncompletedTasks: MotionTask[] = [];
     let aggregateTruncation: TruncationInfo | undefined;
 
@@ -515,7 +515,9 @@ export async function getAllUncompletedTasks(ctx: ResourceContext, options: GetA
 
         try {
           // Calculate fetch limit before API call (defense-in-depth)
-          const fetchLimit = calculateAdaptiveFetchLimit(allUncompletedTasks.length, effectiveLimit);
+          // Fork fix (2026-11-08): the default ceiling here was MAX_SEARCH_RESULTS (100), which
+          // silently dropped every task past the 100th in a large workspace.
+          const fetchLimit = calculateAdaptiveFetchLimit(allUncompletedTasks.length, effectiveLimit, 3, LIMITS.MAX_UNCOMPLETED_FETCH_PER_WORKSPACE);
           if (fetchLimit <= 0) break;
 
           // Get tasks from this workspace with adaptive limit

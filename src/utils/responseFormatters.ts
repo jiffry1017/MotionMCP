@@ -172,6 +172,15 @@ export function formatTaskList(
   const structured: Record<string, unknown> = {
     tasks: tasks.map(taskToStructuredContent),
   };
+  // Fork fix (2026-11-08): clients that read only structuredContent never saw the
+  // truncation notice, so a cut-off list looked complete. Carry it here too.
+  if (truncation?.wasTruncated) {
+    structured.truncation = {
+      returnedCount: truncation.returnedCount,
+      reason: truncation.reason,
+      note: formatTruncationNotice(truncation).trim(),
+    };
+  }
 
   return formatMcpSuccess(responseText, structured);
 }

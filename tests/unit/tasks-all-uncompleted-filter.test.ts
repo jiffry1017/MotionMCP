@@ -73,4 +73,23 @@ describe('getAllUncompletedTasks cross-workspace filtering', () => {
     const ids = result.items.map((t: any) => t.id).sort();
     expect(ids).toEqual(['A', 'B', 'C', 'D']);
   });
+
+  it('returns more than 100 tasks from one workspace (fork fix 2026-11-08)', async () => {
+    const big = Array.from({ length: 251 }, (_, i) => ({ id: `T${i}`, name: `T${i}`, status: 'Todo', priority: 'MEDIUM', dueDate: null }));
+    // Serve the workspace in pages of 50 with cursors, the way the Motion API does.
+    const get = vi.fn().mockImplementation((url: string) => {
+      if (url.startsWith('/workspaces')) {
+        return Promise.resolve({ data: { workspaces: [{ id: 'ws1', name: 'Big' }] }, status: 200, statusText: 'OK', headers: {}, config: {} });
+      }
+      const params = new URLSearchParams(url.split('?')[1] || '');
+      const start = Number(params.get('cursor') || 0);
+      const page = big.slice(start, start + 50);
+      const next = start + 50 < big.length ? String(start + 50) : undefined;
+      return Promise.resolve({ data: { meta: { pageSize: 50, nextCursor: next }, tasks: page }, status: 200, statusText: 'OK', headers: {}, config: {} });
+    });
+    const { ctx } = makeMockCtx([], {});
+    (ctx.api as any).client = { get };
+    const result = await getAllUncompletedTasks(ctx, {});
+    expect(result.items).toHaveLength(251);
+  });
 });

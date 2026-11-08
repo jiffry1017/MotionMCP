@@ -93,6 +93,8 @@ export const LIMITS = {
   MAX_PAGES: 10,                // Maximum number of pages to fetch
   ABSOLUTE_MAX_PAGES: 50,       // Absolute maximum pages to prevent infinite loops
   MAX_SEARCH_RESULTS: 100,      // Maximum search results to return
+  MAX_ALL_UNCOMPLETED: 1000,   // Default cap for list_all_uncompleted across every workspace
+  MAX_UNCOMPLETED_FETCH_PER_WORKSPACE: 2000, // Per-workspace fetch ceiling for list_all_uncompleted (MAX_PAGE_SIZE x MAX_PAGES)
   MAX_SEARCH_FETCH: 300         // Maximum items to fetch per source when overfetching for client-side search filtering
 } as const;
 
