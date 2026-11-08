@@ -533,22 +533,26 @@ export async function getAllUncompletedTasks(ctx: ResourceContext, options: GetA
           aggregateTruncation = ctx.api.mergeTruncationMetadata(aggregateTruncation, wsTruncation);
 
           // Filter for uncompleted tasks
+          const resolvedStatusNames = new Set([
+            'completed',
+            'complete',
+            'done',
+            'closed',
+            'resolved',
+            'canceled',
+            'cancelled'
+          ]);
           const uncompletedTasks = workspaceTasks.filter(task => {
             // Task is uncompleted if status is missing or isResolvedStatus is false
             if (!task.status) return true; // No status = not resolved
             if (typeof task.status === 'string') {
-              const resolvedStatusNames = new Set([
-                'completed',
-                'complete',
-                'done',
-                'closed',
-                'resolved',
-                'canceled',
-                'cancelled'
-              ]);
               return !resolvedStatusNames.has(task.status.trim().toLowerCase());
             }
-            return !task.status.isResolvedStatus; // Object status with isResolvedStatus false
+            // Fork fix (2026-11-08): Motion reports "Canceled" with isResolvedStatus false,
+            // so canceled tasks came back as open. Check the status name as well.
+            if (task.status.isResolvedStatus) return false;
+            const name = typeof task.status.name === 'string' ? task.status.name.trim().toLowerCase() : '';
+            return !resolvedStatusNames.has(name);
           });
 
           // Only add as many as we still need

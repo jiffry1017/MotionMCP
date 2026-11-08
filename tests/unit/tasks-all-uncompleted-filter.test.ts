@@ -92,4 +92,14 @@ describe('getAllUncompletedTasks cross-workspace filtering', () => {
     const result = await getAllUncompletedTasks(ctx, {});
     expect(result.items).toHaveLength(251);
   });
+
+  it('drops canceled tasks even when Motion marks them unresolved (fork fix 2026-11-08)', async () => {
+    const { ctx } = makeMockCtx([{ id: 'ws1', name: 'One' }], { ws1: [
+      { id: 'open', name: 'open', status: { name: 'Todo', isResolvedStatus: false }, dueDate: null },
+      { id: 'cxl', name: 'cxl', status: { name: 'Canceled', isResolvedStatus: false }, dueDate: null },
+      { id: 'done', name: 'done', status: { name: 'Completed', isResolvedStatus: true }, dueDate: null },
+    ] });
+    const result = await getAllUncompletedTasks(ctx, {});
+    expect(result.items.map((t: any) => t.id)).toEqual(['open']);
+  });
 });
